@@ -3,6 +3,7 @@
 from flask import Flask, jsonify, request, make_response
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
+import ipdb
 
 from models import db, Plant
 
@@ -47,6 +48,37 @@ class PlantByID(Resource):
         plant = Plant.query.filter_by(id=id).first().to_dict()
         return make_response(jsonify(plant), 200)
 
+    def patch(self, id):
+        plant = Plant.query.filter_by(id=id).first()
+        if plant:
+            json = request.get_json()
+
+            for attr, value in json.items():
+                setattr(plant, attr, value)
+
+        db.session.add(plant)
+        db.session.commit()
+
+        response_dict = plant.to_dict()
+
+        response = make_response(response_dict, 200)
+
+        return response
+
+    def delete(self, id):
+        plant = Plant.query.filter_by(id=id).first()
+
+        if plant:
+            db.session.delete(plant)
+            db.session.commit()
+            return {'message': 'Plant deleted successfully'}, 204
+        else:
+            return {'message': 'Plant not found'}, 404
+
+
+        
+
+            
 
 api.add_resource(PlantByID, '/plants/<int:id>')
 
